@@ -1,7 +1,107 @@
 .burger_constructor {
+  position: relative;
   display: flex;
   flex-direction: column;
-  width: 600px;
+  width: 100%;
   padding-bottom: 20px;
   color: var(--text-primary-color);
+}
+
+.scrollable_wrapper {
+  position: relative;
+  max-height: 56%;
+  margin: 18px 0;
+  padding-right: 8px;
+  overflow-y: auto;
+}
+
+.constructor_list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.constructor_item {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.blocked {
+  opacity: 0.9;
+}
+
+.item_inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 18px;
+  background: var(--background);
+  border-radius: 100px;
+}
+
+.drag_icon {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.item_info {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 16px;
+}
+
+.item_image {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.price_row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete_button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.locked_tag {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.total {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.order_btn {
+  min-width: 220px;
 }
