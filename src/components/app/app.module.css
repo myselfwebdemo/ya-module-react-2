@@ -15,9 +15,19 @@
 
 .main {
   display: flex;
-  justify-content: space-between;
+  gap: 5vw;
   width: 1240px;
   height: 100%;
   margin: 0 auto;
   overflow: hidden;
+}
+
+.error_block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 1260px;
+  margin: 0 auto;
+  padding: 32px;
 }

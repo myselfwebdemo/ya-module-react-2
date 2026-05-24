@@ -13,3 +13,93 @@
   text-align: center;
   list-style-type: none;
 }
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-height: 660px;
+  margin-top: 18px;
+  padding-right: 8px;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.content::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar {
+  --center-color: #fdeff9;
+  --center-adj-color: #ec38bc;
+  --further-adj-color: #7303c0;
+  --center-adj-offset: 10%;
+  --center-adj-before: calc(var(--scrollbar-center-pos) - var(--center-adj-offset));
+  --scrollbar-center-pos: 0%;
+  --center-adj-after: calc(var(--scrollbar-center-pos) + var(--center-adj-offset));
+  position: relative;
+
+  /* top: 10%;
+  right: -12px; */
+
+  /* top: 0;
+  left: 0; */
+
+  /* position: absolute; */
+
+  /* width: 6px; */
+
+  /* height: 81%; */
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-bottom-right-radius: 5px;
+
+  /* margin-top: 16px; */
+
+  /* border-radius: 10px; */
+  border-bottom-left-radius: 5px;
+
+  /* box-shadow: 0 0 30px var(--colors-interface-accent); */
+}
+
+.scrollbar::before,
+.scrollbar::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    var(--background) 0%,
+    var(--further-adj-color),
+    var(--center-adj-color) var(--center-adj-before),
+    var(--center-color) var(--scrollbar-center-pos),
+    var(--center-adj-color) var(--center-adj-after),
+    var(--further-adj-color),
+    var(--background) 100%
+  );
+  content: '';
+}
+
+.scrollbar::before {
+  z-index: 0;
+  filter: blur(25px);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px 42px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

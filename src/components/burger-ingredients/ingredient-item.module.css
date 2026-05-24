@@ -1,0 +1,41 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+  cursor: pointer;
+}
+
+.counter_wrap {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+}
+
+.image_wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 2vh;
+}
+
+.image {
+  max-width: 120px;
+  max-height: 96px;
+  filter: drop-shadow(0 2vh 30px var(--colors-interface-accent));
+}
+
+.price_row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.title {
+  color: var(--text-inactive-color);
+  text-align: center;
+}
