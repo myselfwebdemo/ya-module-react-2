@@ -39,7 +39,6 @@ function BurgerIngredients({
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // Observer for active tab
   useEffect(() => {
     const content = contentRef.current;
     if (!content) return;
@@ -75,7 +74,6 @@ function BurgerIngredients({
     return (): void => observer.disconnect();
   }, []);
 
-  // Scrollbar update
   useEffect(() => {
     const scrollbar = scrollbarRef.current;
     const content = contentRef.current;

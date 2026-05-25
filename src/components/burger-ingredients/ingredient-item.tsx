@@ -1,4 +1,6 @@
 import { Counter, CurrencyIcon } from '@krgaa/react-developer-burger-ui-components';
+import { useRef } from 'react';
+import { useDrag } from 'react-dnd';
 
 import type { TIngredient } from '@/utils/types';
 
@@ -15,8 +17,26 @@ function IngredientCard({
   count = 0,
   onSelect,
 }: TIngredientCardProps): React.JSX.Element {
+  const ref = useRef<HTMLLIElement>(null);
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'ingredient',
+    item: { ingredientId: item._id, type: item.type },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  drag(ref);
+
   return (
-    <li key={item._id} className={styles.card} onClick={() => onSelect(item._id)}>
+    <li
+      ref={ref}
+      key={item._id}
+      className={styles.card}
+      onClick={() => onSelect(item._id)}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
+    >
       {count > 0 && (
         <div className={styles.counter_wrap}>
           <Counter count={count} size="default" />

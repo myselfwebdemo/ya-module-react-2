@@ -2,6 +2,7 @@ import { Preloader } from '@krgaa/react-developer-burger-ui-components';
 import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { AppHeader } from '@components/app-header/app-header';
 import { BurgerConstructor } from '@components/burger-constructor/burger-constructor';
@@ -9,130 +10,111 @@ import BurgerIngredients from '@components/burger-ingredients/burger-ingredients
 import { IngredientDetails } from '@components/modal/ingredient-details';
 import { Modal } from '@components/modal/modal';
 import { OrderDetails } from '@components/modal/order-details';
-import { API_BASE_URL } from '@utils/constants';
 
-import type { TIngredient } from '@utils/types';
+import {
+  addBun,
+  addIngredient,
+  removeIngredient,
+  moveIngredient,
+  clearConstructor,
+} from '../../features/burgerConstructor/burgerConstructorSlice';
+import { fetchIngredients } from '../../features/ingredients/ingredientsSlice';
+import { createOrder } from '../../features/order/orderSlice';
+import {
+  selectIngredient,
+  clearSelectedIngredient,
+} from '../../features/selectedIngredient/selectedIngredientSlice';
+
+import type { RootState, AppDispatch } from '../../store';
 import type React from 'react';
 
 import styles from './app.module.css';
 
-type TConstructorItem = string;
-
-type TIngredientsResponse = {
-  success: boolean;
-  data: TIngredient[];
-};
-
 export const App = (): React.JSX.Element => {
-  const [ingredients, setIngredients] = useState<TIngredient[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [constructorOrder, setConstructorOrder] = useState<TConstructorItem[]>([]);
-  const [selectedBunId, setSelectedBunId] = useState<string | null>(null);
-  const [selectedIngredient, setSelectedIngredient] = useState<TIngredient | null>(null);
-  const [isIngredientModalOpen, setIngredientModalOpen] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+
+  const ingredients = useSelector((s: RootState) => s.ingredients.items);
+  const status = useSelector((s: RootState) => s.ingredients.status);
+  const error = useSelector((s: RootState) => s.ingredients.error);
+  const selectedIngredient = useSelector((s: RootState) => s.selectedIngredient);
+  const burgerConstructor = useSelector((s: RootState) => s.burgerConstructor);
+  const orderNumber = useSelector((s: RootState) => s.order.number);
+
   const [isOrderModalOpen, setOrderModalOpen] = useState(false);
-  const [orderNumber, setOrderNumber] = useState<string>('');
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadIngredients = async (): Promise<void> => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response: Response = await fetch(`${API_BASE_URL}/ingredients`);
-        if (!response.ok)
-          throw new Error(`Ошибка запроса: ${response.status} ${response.statusText}`);
-
-        const body: TIngredientsResponse =
-          (await response.json()) as TIngredientsResponse;
-        if (!body?.success || !Array.isArray(body.data))
-          throw new Error('Получены некорректные данные от сервера');
-
-        if (isMounted) setIngredients(body.data);
-      } catch (err) {
-        if (!isMounted) return;
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'Неизвестная ошибка при загрузке ингредиентов';
-        setError(message);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    void loadIngredients();
-
-    return (): void => {
-      isMounted = false;
-    };
-  }, []);
+    void dispatch(fetchIngredients());
+  }, [dispatch]);
 
   const handleAddIngredient = (ingredientId: string): void => {
     const ingredient = ingredients.find((item) => item._id === ingredientId);
     if (!ingredient) return;
 
     if (ingredient.type === 'bun') {
-      setSelectedBunId(ingredientId);
+      dispatch(addBun(ingredient));
       return;
     }
 
-    setConstructorOrder((prev) => [...prev, ingredientId]);
+    dispatch(addIngredient(ingredient));
   };
+
   const handleAddIngredientAndClose = (ingredientId: string): void => {
     handleAddIngredient(ingredientId);
-    setIngredientModalOpen(false);
-    setSelectedIngredient(null);
+    dispatch(clearSelectedIngredient());
   };
+
   const handleSelectIngredient = (ingredientId: string): void => {
     const ingredient = ingredients.find((item) => item._id === ingredientId);
     if (!ingredient) return;
-
-    setSelectedIngredient(ingredient);
-    setIngredientModalOpen(true);
+    dispatch(selectIngredient(ingredient));
   };
+
   const handleCloseIngredientModal = (): void => {
-    setIngredientModalOpen(false);
-    setSelectedIngredient(null);
+    dispatch(clearSelectedIngredient());
   };
 
-  const canOrder = selectedBunId !== null && constructorOrder.length > 0;
+  const canOrder =
+    burgerConstructor.bun !== null && burgerConstructor.ingredients.length > 0;
 
-  const handleOpenOrderModal = (): void => {
-    if (!canOrder) return;
-    setOrderNumber(String(Math.floor(100000 + Math.random() * 900000)));
-    setOrderModalOpen(true);
+  const handleOpenOrderModal = async (): Promise<void> => {
+    if (!canOrder || !burgerConstructor.bun) return;
+
+    const payload = [
+      burgerConstructor.bun._id,
+      ...burgerConstructor.ingredients.map((ing) => ing._id),
+      burgerConstructor.bun._id,
+    ];
+
+    try {
+      await dispatch(createOrder(payload)).unwrap();
+      dispatch(clearConstructor());
+      setOrderModalOpen(true);
+    } catch (err) {
+      alert(err ?? 'Ошибка при создании заказа');
+    }
   };
 
   const handleCloseOrderModal = (): void => setOrderModalOpen(false);
 
-  const handleRemoveIngredient = (index: number): void => {
-    setConstructorOrder((prev) => {
-      if (index < 0 || index >= prev.length) return prev;
-      return [...prev.slice(0, index), ...prev.slice(index + 1)];
-    });
+  const handleRemoveIngredient = (uniqueId: string): void => {
+    dispatch(removeIngredient(uniqueId));
   };
+
   const getIngredientCount = (ingredientId: string): number => {
     const ingredient = ingredients.find((item) => item._id === ingredientId);
     if (!ingredient) return 0;
     if (ingredient.type === 'bun') {
-      return selectedBunId === ingredientId ? 1 : 0;
+      return burgerConstructor.bun?._id === ingredientId ? 1 : 0;
     }
-    return constructorOrder.filter((item) => item === ingredientId).length;
-  };
-  const moveIngredient = (from: number, to: number): void => {
-    setConstructorOrder((prev) => {
-      const next = [...prev];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
+    return burgerConstructor.ingredients.filter((item) => item._id === ingredientId)
+      .length;
   };
 
-  if (isLoading) return <Preloader />;
+  const handleMoveIngredient = (from: number, to: number): void => {
+    dispatch(moveIngredient({ from, to }));
+  };
+
+  if (status === 'loading') return <Preloader />;
 
   if (error) {
     return (
@@ -161,17 +143,17 @@ export const App = (): React.JSX.Element => {
             getIngredientCount={getIngredientCount}
           />
           <BurgerConstructor
-            ingredients={ingredients}
-            constructorOrder={constructorOrder}
-            selectedBunId={selectedBunId}
+            ingredients={burgerConstructor.ingredients}
+            selectedBun={burgerConstructor.bun}
             onRemoveIngredient={handleRemoveIngredient}
-            moveIngredient={moveIngredient}
+            moveIngredient={handleMoveIngredient}
             onOpenOrder={handleOpenOrderModal}
             canOrder={canOrder}
+            onAddIngredient={handleAddIngredient}
           />
         </main>
 
-        {selectedIngredient && isIngredientModalOpen && (
+        {selectedIngredient && (
           <Modal title="Детали ингредиента" onClose={handleCloseIngredientModal}>
             <IngredientDetails
               ingredient={selectedIngredient}
@@ -181,8 +163,8 @@ export const App = (): React.JSX.Element => {
         )}
 
         {isOrderModalOpen && (
-          <Modal title={`#${orderNumber}`} onClose={handleCloseOrderModal}>
-            <OrderDetails orderNumber={orderNumber} />
+          <Modal title={`#${orderNumber ?? ''}`} onClose={handleCloseOrderModal}>
+            <OrderDetails orderNumber={orderNumber ?? ''} />
           </Modal>
         )}
       </div>
