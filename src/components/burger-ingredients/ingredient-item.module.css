@@ -10,7 +10,7 @@
 .counter_wrap {
   position: absolute;
   top: -8px;
-  right: -8px;
+  right: 30px;
 }
 
 .image_wrap {
@@ -22,8 +22,10 @@
 }
 
 .image {
-  max-width: 120px;
-  max-height: 96px;
+  /* max-width: 120px;
+  max-height: 96px; */
+  width: auto;
+  height: 100%;
   filter: drop-shadow(0 2vh 30px var(--colors-interface-accent));
 }
 

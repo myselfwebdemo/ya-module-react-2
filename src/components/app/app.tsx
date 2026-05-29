@@ -42,9 +42,7 @@ export const App = (): React.JSX.Element => {
 
   const [isOrderModalOpen, setOrderModalOpen] = useState(false);
 
-  useEffect(() => {
-    void dispatch(fetchIngredients());
-  }, [dispatch]);
+  useEffect(() => void dispatch(fetchIngredients()), [dispatch]);
 
   const handleAddIngredient = (ingredientId: string): void => {
     const ingredient = ingredients.find((item) => item._id === ingredientId);
@@ -117,6 +115,7 @@ export const App = (): React.JSX.Element => {
   if (status === 'loading') return <Preloader />;
 
   if (error) {
+    console.log(error);
     return (
       <div className={styles.app}>
         <AppHeader />

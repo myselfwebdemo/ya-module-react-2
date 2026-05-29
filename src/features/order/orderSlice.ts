@@ -1,3 +1,4 @@
+import checkResponse from '@/utils/check-response';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 import { API_BASE_URL } from '@utils/constants';
@@ -28,17 +29,13 @@ export const createOrder = createAsyncThunk<string, string[], { rejectValue: str
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ingredients }),
-      });
+      }).then(checkResponse<OrderResponse>);
 
-      if (!res.ok)
-        return rejectWithValue(`Ошибка запроса: ${res.status} ${res.statusText}`);
-
-      const body = (await res.json()) as OrderResponse;
-      if (!body?.success || !body.order || typeof body.order.number !== 'number') {
+      if (!res?.success || !res.order || typeof res.order.number !== 'number') {
         return rejectWithValue('Некорректный ответ от сервера при создании заказа');
       }
 
-      return String(body.order.number);
+      return String(res.order.number);
     } catch (err) {
       return rejectWithValue(
         err instanceof Error ? err.message : 'Неизвестная ошибка при создании заказа'

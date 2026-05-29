@@ -6,18 +6,15 @@ import {
 } from '@krgaa/react-developer-burger-ui-components';
 import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import { useSelector } from 'react-redux';
 
+import type { RootState } from '@/store';
 import type { TIngredient } from '@utils/types';
 import type React from 'react';
 
 import styles from './burger-constructor.module.css';
 
-type TConstructorIngredient = TIngredient & {
-  uniqueId: string;
-};
-
 type TBurgerConstructorProps = {
-  ingredients: TConstructorIngredient[];
   selectedBun: TIngredient | null;
   onRemoveIngredient: (uniqueId: string) => void;
   moveIngredient: (from: number, to: number) => void;
@@ -32,6 +29,7 @@ type TConstructorItemProps = {
   blocked?: boolean;
   onRemove?: () => void;
   moveIngredient?: (from: number, to: number) => void;
+  type?: 'top-bun' | 'bottom-bun';
 };
 
 const ConstructorItem = ({
@@ -40,6 +38,7 @@ const ConstructorItem = ({
   blocked,
   onRemove,
   moveIngredient,
+  type,
 }: TConstructorItemProps): React.JSX.Element => {
   const ref = useRef<HTMLLIElement>(null);
 
@@ -76,7 +75,12 @@ const ConstructorItem = ({
         </div>
       )}
 
-      <div className={styles.item_inner}>
+      <div
+        className={`
+        ${styles.item_inner}
+        ${type ? (type === 'top-bun' ? styles.top_item_bun : styles.bottom_item_bun) : ''}
+      `}
+      >
         <div className={styles.item_info}>
           <img src={item.image} alt={item.name} className={styles.item_image} />
           <p className="text text_type_main-default">{item.name}</p>
@@ -101,7 +105,6 @@ const ConstructorItem = ({
 };
 
 export const BurgerConstructor = ({
-  ingredients,
   selectedBun,
   onRemoveIngredient,
   moveIngredient,
@@ -109,6 +112,9 @@ export const BurgerConstructor = ({
   canOrder,
   onAddIngredient,
 }: TBurgerConstructorProps): React.JSX.Element => {
+  const ingredients = useSelector(
+    (store: RootState) => store.burgerConstructor.ingredients
+  );
   const constructorItemsData = ingredients.filter((item) => item.type !== 'bun');
 
   const totalPrice =
@@ -154,9 +160,11 @@ export const BurgerConstructor = ({
     <section className={styles.burger_constructor}>
       <div ref={topBunDropRef}>
         {selectedBun ? (
-          <ConstructorItem item={selectedBun} blocked />
+          <ConstructorItem item={selectedBun} type="top-bun" blocked />
         ) : (
-          <div className={styles.placeholder}>Добавьте булку</div>
+          <div className={`${styles.placeholder} ${styles.top_item_bun}`}>
+            Добавьте булку (верх)
+          </div>
         )}
       </div>
 
@@ -165,7 +173,7 @@ export const BurgerConstructor = ({
           {constructorItemsData.length > 0 ? (
             constructorItemsData.map((item, index) => (
               <ConstructorItem
-                key={`${item._id}-${index}`}
+                key={item.uniqueId}
                 item={item}
                 index={index}
                 onRemove={() => onRemoveIngredient(item.uniqueId)}
@@ -180,9 +188,11 @@ export const BurgerConstructor = ({
 
       <div ref={bottomBunDropRef}>
         {selectedBun ? (
-          <ConstructorItem item={selectedBun} blocked />
+          <ConstructorItem item={selectedBun} type="bottom-bun" blocked />
         ) : (
-          <div className={styles.placeholder}>Добавьте булку</div>
+          <div className={`${styles.placeholder} ${styles.bottom_item_bun}`}>
+            Добавьте булку (низ)
+          </div>
         )}
       </div>
 

@@ -1,3 +1,4 @@
+import checkResponse from '@/utils/check-response';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 import { API_BASE_URL } from '@utils/constants';
@@ -16,23 +17,24 @@ const initialState: IngredientsState = {
   error: null,
 };
 
+type TIngredientsResponse = {
+  success: boolean;
+  data: TIngredient[];
+};
+
 export const fetchIngredients = createAsyncThunk<
   TIngredient[],
   void,
   { rejectValue: string }
 >('ingredients/fetch', async (_, { rejectWithValue }) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/ingredients`);
-    if (!response.ok)
-      return rejectWithValue(
-        `Ошибка запроса: ${response.status} ${response.statusText}`
-      );
-
-    const body = (await response.json()) as { success: boolean; data: TIngredient[] };
-    if (!body?.success || !Array.isArray(body.data))
+    const res = await fetch(`${API_BASE_URL}/ingredients`).then(
+      checkResponse<TIngredientsResponse>
+    );
+    if (!res?.success || !Array.isArray(res.data))
       return rejectWithValue('Получены некорректные данные от сервера');
 
-    return body.data;
+    return res.data;
   } catch (err) {
     return rejectWithValue(err instanceof Error ? err.message : 'Неизвестная ошибка');
   }

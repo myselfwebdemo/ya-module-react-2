@@ -42,7 +42,7 @@
   width: 100%;
   padding: 16px 18px;
   background: var(--background);
-  border-radius: 100px;
+  border-radius: 30px;
 }
 
 .drag_icon {
@@ -50,6 +50,17 @@
   flex-shrink: 0;
   justify-content: center;
   align-items: center;
+  margin-right: 8px;
+}
+
+.top_item_bun {
+  border-top-left-radius: 90px !important;
+  border-top-right-radius: 90px !important;
+}
+
+.bottom_item_bun {
+  border-bottom-right-radius: 90px !important;
+  border-bottom-left-radius: 90px !important;
 }
 
 .item_info {
@@ -118,5 +129,5 @@
   text-align: center;
   background: var(--background);
   border: 2px dashed var(--text-secondary-color);
-  border-radius: 100px;
+  border-radius: 30px;
 }

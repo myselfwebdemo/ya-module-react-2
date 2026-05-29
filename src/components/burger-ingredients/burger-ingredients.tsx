@@ -1,24 +1,24 @@
 import { Tab } from '@krgaa/react-developer-burger-ui-components';
 import { useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import IngredientCard from './ingredient-item';
 
-import type { TIngredient } from '@utils/types';
+import type { RootState } from '@/store';
 import type React from 'react';
 
 import styles from './burger-ingredients.module.css';
 
 type TBurgerIngredientsProps = {
-  ingredients: TIngredient[];
   onSelectIngredient: (ingredientId: string) => void;
   getIngredientCount: (ingredientId: string) => number;
 };
 
 function BurgerIngredients({
-  ingredients,
   onSelectIngredient,
   getIngredientCount,
 }: TBurgerIngredientsProps): React.JSX.Element {
+  const ingredients = useSelector((store: RootState) => store.ingredients.items);
   const [active, setActive] = useState<'bun' | 'sauce' | 'main'>('bun');
 
   const buns = ingredients.filter((i) => i.type === 'bun');
@@ -29,8 +29,6 @@ function BurgerIngredients({
   const refBuns = useRef<HTMLElement | null>(null);
   const refSauces = useRef<HTMLElement | null>(null);
   const refMains = useRef<HTMLElement | null>(null);
-
-  const scrollbarRef = useRef<HTMLDivElement | null>(null);
 
   const handleTabClick = (value: 'bun' | 'sauce' | 'main'): void => {
     setActive(value);
@@ -74,21 +72,6 @@ function BurgerIngredients({
     return (): void => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const scrollbar = scrollbarRef.current;
-    const content = contentRef.current;
-    if (!scrollbar || !content) return;
-
-    const contentHeight = content.getBoundingClientRect().height;
-    const contentScrollHeight = content.scrollHeight;
-    let scrollProgress = 0;
-
-    content.addEventListener('scroll', () => {
-      scrollProgress = (content.scrollTop / (contentScrollHeight - contentHeight)) * 100;
-      scrollbar.style.setProperty('--scrollbar-center-pos', scrollProgress + '%');
-    });
-  }, []);
-
   return (
     <section className={styles.burger_ingredients}>
       <nav>
@@ -116,8 +99,6 @@ function BurgerIngredients({
           </Tab>
         </ul>
       </nav>
-
-      <div ref={scrollbarRef} className={styles.scrollbar}></div>
 
       <div ref={contentRef} className={styles.content}>
         <section ref={refBuns} className={styles.group}>
