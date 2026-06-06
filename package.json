@@ -92,5 +92,18 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  }
+  },
+  "description": "При создании коммита автоматически запускаются проверка линтерами `stylelint`, `eslint` и форматирование `prettier`.",
+  "main": "prettier.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myselfwebdemo/ya-module-react-2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/myselfwebdemo/ya-module-react-2/issues"
+  },
+  "homepage": "https://github.com/myselfwebdemo/ya-module-react-2#readme"
 }

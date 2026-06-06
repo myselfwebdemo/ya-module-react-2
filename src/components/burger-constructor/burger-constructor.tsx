@@ -6,22 +6,21 @@ import {
 } from '@krgaa/react-developer-burger-ui-components';
 import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import { useSelector } from 'react-redux';
 
+import type { RootState } from '@/store';
 import type { TIngredient } from '@utils/types';
 import type React from 'react';
 
 import styles from './burger-constructor.module.css';
 
-type TConstructorItem = string;
-
 type TBurgerConstructorProps = {
-  ingredients: TIngredient[];
-  constructorOrder: TConstructorItem[];
-  selectedBunId: string | null;
-  onRemoveIngredient: (index: number) => void;
+  selectedBun: TIngredient | null;
+  onRemoveIngredient: (uniqueId: string) => void;
   moveIngredient: (from: number, to: number) => void;
-  onOpenOrder: () => void;
+  onOpenOrder: () => Promise<void>;
   canOrder: boolean;
+  onAddIngredient: (ingredientId: string) => void;
 };
 
 type TConstructorItemProps = {
@@ -30,6 +29,7 @@ type TConstructorItemProps = {
   blocked?: boolean;
   onRemove?: () => void;
   moveIngredient?: (from: number, to: number) => void;
+  type?: 'top-bun' | 'bottom-bun';
 };
 
 const ConstructorItem = ({
@@ -38,6 +38,7 @@ const ConstructorItem = ({
   blocked,
   onRemove,
   moveIngredient,
+  type,
 }: TConstructorItemProps): React.JSX.Element => {
   const ref = useRef<HTMLLIElement>(null);
 
@@ -74,7 +75,12 @@ const ConstructorItem = ({
         </div>
       )}
 
-      <div className={styles.item_inner}>
+      <div
+        className={`
+        ${styles.item_inner}
+        ${type ? (type === 'top-bun' ? styles.top_item_bun : styles.bottom_item_bun) : ''}
+      `}
+      >
         <div className={styles.item_info}>
           <img src={item.image} alt={item.name} className={styles.item_image} />
           <p className="text text_type_main-default">{item.name}</p>
@@ -99,45 +105,96 @@ const ConstructorItem = ({
 };
 
 export const BurgerConstructor = ({
-  ingredients,
-  constructorOrder,
-  selectedBunId,
+  selectedBun,
   onRemoveIngredient,
   moveIngredient,
   onOpenOrder,
   canOrder,
+  onAddIngredient,
 }: TBurgerConstructorProps): React.JSX.Element => {
-  const selectedBun = selectedBunId
-    ? ingredients.find((i) => i._id === selectedBunId)
-    : null;
-
-  const constructorItemsData = constructorOrder
-    .map((id) => ingredients.find((item) => item._id === id))
-    .filter((item): item is TIngredient => !!item && item.type !== 'bun');
+  const ingredients = useSelector(
+    (store: RootState) => store.burgerConstructor.ingredients
+  );
+  const constructorItemsData = ingredients.filter((item) => item.type !== 'bun');
 
   const totalPrice =
     constructorItemsData.reduce((sum, item) => sum + item.price, 0) +
     (selectedBun ? selectedBun.price * 2 : 0);
 
+  const topBunDropRef = useRef<HTMLDivElement>(null);
+  const bottomBunDropRef = useRef<HTMLDivElement>(null);
+  const ingredientsDropRef = useRef<HTMLUListElement>(null);
+
+  const [, topBunDrop] = useDrop({
+    accept: 'ingredient',
+    drop(item: { ingredientId: string; type: string }) {
+      if (item.type === 'bun') {
+        onAddIngredient(item.ingredientId);
+      }
+    },
+  });
+
+  const [, bottomBunDrop] = useDrop({
+    accept: 'ingredient',
+    drop(item: { ingredientId: string; type: string }) {
+      if (item.type === 'bun') {
+        onAddIngredient(item.ingredientId);
+      }
+    },
+  });
+
+  const [, ingredientsDrop] = useDrop({
+    accept: 'ingredient',
+    drop(item: { ingredientId: string; type: string }) {
+      if (item.type !== 'bun') {
+        onAddIngredient(item.ingredientId);
+      }
+    },
+  });
+
+  topBunDrop(topBunDropRef);
+  bottomBunDrop(bottomBunDropRef);
+  ingredientsDrop(ingredientsDropRef);
+
   return (
     <section className={styles.burger_constructor}>
-      {selectedBun && <ConstructorItem item={selectedBun} blocked />}
+      <div ref={topBunDropRef}>
+        {selectedBun ? (
+          <ConstructorItem item={selectedBun} type="top-bun" blocked />
+        ) : (
+          <div className={`${styles.placeholder} ${styles.top_item_bun}`}>
+            Добавьте булку (верх)
+          </div>
+        )}
+      </div>
 
       <div className={styles.scrollable_wrapper}>
-        <ul className={styles.constructor_list}>
-          {constructorItemsData.map((item, index) => (
-            <ConstructorItem
-              key={`${item._id}-${index}`}
-              item={item}
-              index={index}
-              onRemove={() => onRemoveIngredient(index)}
-              moveIngredient={moveIngredient}
-            />
-          ))}
+        <ul ref={ingredientsDropRef} className={styles.constructor_list}>
+          {constructorItemsData.length > 0 ? (
+            constructorItemsData.map((item, index) => (
+              <ConstructorItem
+                key={item.uniqueId}
+                item={item}
+                index={index}
+                onRemove={() => onRemoveIngredient(item.uniqueId)}
+                moveIngredient={moveIngredient}
+              />
+            ))
+          ) : (
+            <div className={styles.placeholder}>Добавьте ингредиенты</div>
+          )}
         </ul>
       </div>
 
-      {selectedBun && <ConstructorItem item={selectedBun} blocked />}
+      <div ref={bottomBunDropRef}>
+        {selectedBun ? (
+          <ConstructorItem item={selectedBun} type="bottom-bun" blocked />
+        ) : (
+          <div className={`${styles.placeholder} ${styles.bottom_item_bun}`}>
+            Добавьте булку (низ)
+          </div>
+        )}
+      </div>
 
       <div className={styles.footer}>
         <div className={styles.total}>
@@ -147,7 +204,7 @@ export const BurgerConstructor = ({
         <button
           type="button"
           className={`button button_type_primary button_size_medium ${styles.order_btn}`}
-          onClick={onOpenOrder}
+          onClick={() => void onOpenOrder()}
           disabled={!canOrder}
         >
           Оформить заказ
